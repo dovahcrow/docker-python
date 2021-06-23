@@ -47,7 +47,7 @@ ENV NVIDIA_REQUIRE_CUDA="cuda>=$CUDA_MAJOR_VERSION.$CUDA_MINOR_VERSION"
 #       libnccl-dev=2.7.8-1+cuda$CUDA_VERSION && \
 #     ln -s /usr/local/cuda-$CUDA_VERSION /usr/local/cuda && \
 #     ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1
-RUN conda install -c nvidia cudatoolkit=$CUDA_VERSION nccl==2.7.8.1 cudnn==8.0.4
+RUN conda install cudatoolkit=$CUDA_VERSION cudatoolkit-dev=$CUDA_VERSION nccl==2.7.8.1 cudnn==8.0.5.39
 
 # Use Bazelisk to ensure the proper bazel version is used.
 RUN cd /usr/local/src && \
@@ -63,35 +63,35 @@ RUN cd /usr/local/src && \
     pip install keras_applications --no-deps && \
     pip install keras_preprocessing --no-deps
 
-# Create a TensorFlow wheel for CPU
-RUN cd /usr/local/src/tensorflow && \
-    cat /dev/null | ./configure && \
-    bazel build --config=opt \
-                --config=v2 \
-                --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
-                //tensorflow/tools/pip_package:build_pip_package && \
-    bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_cpu && \
-    bazel clean
+# # Create a TensorFlow wheel for CPU
+# RUN cd /usr/local/src/tensorflow && \
+#     cat /dev/null | ./configure && \
+#     bazel build --config=opt \
+#                 --config=v2 \
+#                 --cxxopt="-D_GLIBCXX_USE_CXX11_ABI=0" \
+#                 //tensorflow/tools/pip_package:build_pip_package && \
+#     bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_cpu && \
+#     bazel clean
 
-# Install TensorFlow CPU wheel which is required to build the GCS & addons libraries.
-RUN pip install /tmp/tensorflow_cpu/tensorflow*.whl
+# # Install TensorFlow CPU wheel which is required to build the GCS & addons libraries.
+# RUN pip install /tmp/tensorflow_cpu/tensorflow*.whl
 
-# Build TensorFlow addons library against TensorFlow CPU.
-RUN cd /usr/local/src/ && \
-    git clone https://github.com/tensorflow/addons && \
-    cd addons && \
-    git checkout tags/v0.12.1 && \
-    python ./configure.py && \
-    bazel build --enable_runfiles build_pip_pkg && \
-    bazel-bin/build_pip_pkg /tmp/tfa_cpu && \
-    bazel clean
+# # Build TensorFlow addons library against TensorFlow CPU.
+# RUN cd /usr/local/src/ && \
+#     git clone https://github.com/tensorflow/addons && \
+#     cd addons && \
+#     git checkout tags/v0.12.1 && \
+#     python ./configure.py && \
+#     bazel build --enable_runfiles build_pip_pkg && \
+#     bazel-bin/build_pip_pkg /tmp/tfa_cpu && \
+#     bazel clean
 
-# Build tensorflow_gcs_config library against TensorFlow CPU.
-ADD tensorflow-gcs-config /usr/local/src/tensorflow_gcs_config/
-RUN cd /usr/local/src/tensorflow_gcs_config && \
-    apt-get install -y libcurl4-openssl-dev && \
-    python setup.py bdist_wheel -d /tmp/tensorflow_gcs_config && \
-    bazel clean
+# # Build tensorflow_gcs_config library against TensorFlow CPU.
+# ADD tensorflow-gcs-config /usr/local/src/tensorflow_gcs_config/
+# RUN cd /usr/local/src/tensorflow_gcs_config && \
+#     apt-get install -y libcurl4-openssl-dev && \
+#     python setup.py bdist_wheel -d /tmp/tensorflow_gcs_config && \
+#     bazel clean
 
 # Create a tensorflow wheel for GPU/cuda
 ENV TF_NEED_CUDA=1
