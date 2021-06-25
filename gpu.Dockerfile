@@ -32,7 +32,7 @@ RUN apt-get install -y ocl-icd-libopencl1 clinfo libboost-all-dev && \
 # the remaining pip commands: https://www.anaconda.com/using-pip-in-a-conda-environment/
 # However, because this image is based on the CPU image, this isn't possible but better
 # to put them at the top of this file to minize conflicts.
-RUN conda remove --force -y pytorch torchvision torchaudio cpuonly && \
+RUN conda remove --force -y pytorch torchvision torchaudio torchtext cpuonly && \
     conda install "pytorch=1.7" "torchvision=0.8" "torchaudio=0.7" "torchtext=0.8" "cudf=0.16" "cuml=0.16" cudatoolkit=$CUDA_VERSION cudnn=$CUDNN_VERSION && \
     /tmp/clean-layer.sh
 

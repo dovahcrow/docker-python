@@ -39,8 +39,6 @@ ENV PROJ_LIB=/opt/conda/share/proj
 # the remaining pip commands: https://www.anaconda.com/using-pip-in-a-conda-environment/
 # Using the same global consistent ordered list of channels
 RUN conda config --add channels conda-forge && \
-    conda config --add channels nvidia && \
-    conda config --add channels pytorch && \
     conda config --add channels rapidsai && \
     # ^ rapidsai is the highest priority channel, default lowest, conda-forge 2nd lowest.
     # b/182405233 pyproj 3.x is not compatible with basemap 1.2.1
