@@ -1,16 +1,8 @@
 ARG BASE_TAG=staging
 
-FROM nvidia/cuda:11.0-cudnn8-devel-ubuntu18.04 AS nvidia
 FROM gcr.io/kaggle-images/python:${BASE_TAG}
 
 ADD clean-layer.sh  /tmp/clean-layer.sh
-
-# Cuda support
-COPY --from=nvidia /etc/apt/sources.list.d/cuda.list /etc/apt/sources.list.d/
-COPY --from=nvidia /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/
-COPY --from=nvidia /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/cuda.gpg
-# See b/142337634#comment28
-RUN sed -i 's/deb https:\/\/developer.download.nvidia.com/deb http:\/\/developer.download.nvidia.com/' /etc/apt/sources.list.d/*.list
 
 # Ensure the cuda libraries are compatible with the custom Tensorflow wheels.
 # TODO(b/120050292): Use templating to keep in sync or COPY installed binaries from it.
@@ -25,27 +17,9 @@ ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/opt/bin:${PATH}
 # CUDA user libraries, either manually or through the use of nvidia-docker) exclude them. One
 # convenient way to do so is to obscure its contents by a bind mount:
 #   docker run .... -v /non-existing-directory:/usr/local/cuda/lib64/stubs:ro ...
-ENV LD_LIBRARY_PATH_NO_STUBS="/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
-ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH"
-ENV NVIDIA_VISIBLE_DEVICES=all
-ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
-ENV NVIDIA_REQUIRE_CUDA="cuda>=$CUDA_MAJOR_VERSION.$CUDA_MINOR_VERSION"
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      cuda-cupti-$CUDA_VERSION \
-      cuda-cudart-$CUDA_VERSION \
-      cuda-cudart-dev-$CUDA_VERSION \
-      cuda-libraries-$CUDA_VERSION \
-      cuda-libraries-dev-$CUDA_VERSION \
-      cuda-nvml-dev-$CUDA_VERSION \
-      cuda-minimal-build-$CUDA_VERSION \
-      cuda-command-line-tools-$CUDA_VERSION \
-      libcudnn8=8.0.4.30-1+cuda$CUDA_VERSION \
-      libcudnn8-dev=8.0.4.30-1+cuda$CUDA_VERSION \
-      libnccl2=2.7.8-1+cuda$CUDA_VERSION \
-      libnccl-dev=2.7.8-1+cuda$CUDA_VERSION && \
-    ln -s /usr/local/cuda-$CUDA_VERSION /usr/local/cuda && \
-    ln -s /usr/local/cuda/lib64/stubs/libcuda.so /usr/local/cuda/lib64/stubs/libcuda.so.1 && \
-    /tmp/clean-layer.sh
+# TODO(rosbo): Put this back
+# ENV LD_LIBRARY_PATH_NO_STUBS="/usr/local/nvidia/lib64:/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+# ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH"
 
 # Install OpenCL & libboost (required by LightGBM GPU version)
 RUN apt-get install -y ocl-icd-libopencl1 clinfo libboost-all-dev && \
